@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -16,8 +17,8 @@ class TrackingDetailScreen extends StatefulWidget {
 class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
   bool _isLoading = true;
   Map<String, dynamic>? _booking;
+  Timer? _refreshTimer;
 
-  // Maps API status → step index
   static const _statusToStep = {
     'PENDING':         0,
     'CHECKING':        1,
@@ -33,6 +34,21 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
   void initState() {
     super.initState();
     _fetchBooking();
+    // Auto-refresh setiap 10 detik
+    _refreshTimer = Timer.periodic(const Duration(seconds: 10), (_) => _silentRefresh());
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _silentRefresh() async {
+    try {
+      final data = await ApiService.getBookingById(widget.bookingId);
+      if (mounted) setState(() => _booking = data);
+    } catch (_) {}
   }
 
   Future<void> _fetchBooking() async {

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -16,8 +17,8 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
   late TabController _tabController;
   bool _isLoading = true;
   List<dynamic> _orders = [];
+  Timer? _refreshTimer;
 
-  // Statuses considered "active" (in progress)
   static const _activeStatuses = {
     'PENDING', 'CHECKING', 'WAITING_PAYMENT', 'PAYMENT_REVIEW', 'IN_PROGRESS', 'TESTING',
   };
@@ -27,12 +28,22 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _fetchOrders();
+    // Auto-refresh setiap 15 detik
+    _refreshTimer = Timer.periodic(const Duration(seconds: 15), (_) => _silentRefresh());
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _refreshTimer?.cancel();
     super.dispose();
+  }
+
+  Future<void> _silentRefresh() async {
+    try {
+      final data = await ApiService.getUserBookings();
+      if (mounted) setState(() => _orders = data);
+    } catch (_) {}
   }
 
   Future<void> _fetchOrders() async {
