@@ -89,12 +89,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
               }
             },
           ),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.refresh_rounded, color: Theme.of(context).colorScheme.onSurface),
-              onPressed: _fetchOrders,
-            ),
-          ],
+
           bottom: TabBar(
             controller: _tabController,
             indicatorColor: AppTheme.primaryColor,

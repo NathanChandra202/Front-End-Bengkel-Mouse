@@ -6,6 +6,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../theme.dart';
 import '../../services/api_service.dart';
+import 'package:provider/provider.dart';
+import '../../providers/user_provider.dart';
 
 class BookingScreen extends StatefulWidget {
   const BookingScreen({super.key});
@@ -609,10 +611,14 @@ class _BookingSuccessSheetState extends State<_BookingSuccessSheet> {
   }
 
   String _buildTemplate() {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final senderName = userProvider.name.isNotEmpty ? userProvider.name : 'Pengguna';
     final receiverName = _storeInfo?['receiverName'] ?? _storeInfo?['name'] ?? 'Bengkel Mouse';
     final address = _storeInfo?['address'] ?? '-';
     final phone = _storeInfo?['phone'] ?? _storeInfo?['whatsapp'] ?? '-';
-    return '''Kepada: $receiverName
+    return '''Pengirim: $senderName
+
+Kepada: $receiverName
 Alamat: $address
 No. HP: $phone
 

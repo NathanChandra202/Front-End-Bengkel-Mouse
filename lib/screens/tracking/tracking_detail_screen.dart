@@ -133,12 +133,7 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
             icon: Icon(Icons.arrow_back_rounded, color: Theme.of(context).colorScheme.onSurface),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.refresh_rounded, color: Theme.of(context).brightness == Brightness.dark ? AppTheme.textMuted : AppTheme.textMutedLight),
-              onPressed: _fetchBooking,
-            ),
-          ],
+
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(1),
             child: Container(height: 1, color: Theme.of(context).dividerTheme.color!),
