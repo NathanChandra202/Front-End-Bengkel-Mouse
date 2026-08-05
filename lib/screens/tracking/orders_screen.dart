@@ -106,25 +106,15 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
             ],
           ),
         ),
-        body: RefreshIndicator(
-                onRefresh: _fetchOrders,
-                color: AppTheme.primaryColor,
-                child: _isLoading
-            ? ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                children: [
-                  SizedBox(height: MediaQuery.of(context).size.height * 0.35),
-                  const Center(child: CircularProgressIndicator()),
-                ],
-              )
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
             : TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildOrderList(_activeOrders),
-                    _buildOrderList(_completedOrders),
-                    _buildOrderList(_orders),
-                  ],
-                ),
+                controller: _tabController,
+                children: [
+                  _buildOrderList(_activeOrders),
+                  _buildOrderList(_completedOrders),
+                  _buildOrderList(_orders),
+                ],
               ),
       ),
     );
@@ -132,29 +122,37 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
 
   Widget _buildOrderList(List<dynamic> orders) {
     if (orders.isEmpty) {
-      return ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        children: [
-          SizedBox(height: MediaQuery.of(context).size.height * 0.35),
-          Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.inbox_outlined, size: 56, color: (Theme.of(context).brightness == Brightness.dark ? AppTheme.textMuted : AppTheme.textMutedLight).withAlpha(100)),
-                const SizedBox(height: 12),
-                Text('Belum ada pesanan', style: GoogleFonts.outfit(color: (Theme.of(context).brightness == Brightness.dark ? AppTheme.textMuted : AppTheme.textMutedLight), fontSize: 15)),
-              ],
+      return RefreshIndicator(
+        onRefresh: _fetchOrders,
+        color: AppTheme.primaryColor,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(height: MediaQuery.of(context).size.height * 0.35),
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.inbox_outlined, size: 56, color: (Theme.of(context).brightness == Brightness.dark ? AppTheme.textMuted : AppTheme.textMutedLight).withAlpha(100)),
+                  const SizedBox(height: 12),
+                  Text('Belum ada pesanan', style: GoogleFonts.outfit(color: (Theme.of(context).brightness == Brightness.dark ? AppTheme.textMuted : AppTheme.textMutedLight), fontSize: 15)),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       );
     }
-    return ListView.separated(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-      itemCount: orders.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 10),
-      itemBuilder: (ctx, i) => _buildOrderCard(ctx, orders[i]),
+    return RefreshIndicator(
+      onRefresh: _fetchOrders,
+      color: AppTheme.primaryColor,
+      child: ListView.separated(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+        itemCount: orders.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 10),
+        itemBuilder: (ctx, i) => _buildOrderCard(ctx, orders[i]),
+      ),
     );
   }
 
