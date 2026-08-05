@@ -81,7 +81,13 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
           title: Text('Pesanan Saya', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface)),
           leading: IconButton(
             icon: Icon(Icons.arrow_back_rounded, color: Theme.of(context).colorScheme.onSurface),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/home');
+              }
+            },
           ),
           actions: [
             IconButton(
@@ -105,12 +111,18 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
             ],
           ),
         ),
-        body: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : RefreshIndicator(
+        body: RefreshIndicator(
                 onRefresh: _fetchOrders,
                 color: AppTheme.primaryColor,
-                child: TabBarView(
+                child: _isLoading
+            ? ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.35),
+                  const Center(child: CircularProgressIndicator()),
+                ],
+              )
+            : TabBarView(
                   controller: _tabController,
                   children: [
                     _buildOrderList(_activeOrders),
@@ -125,18 +137,25 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
 
   Widget _buildOrderList(List<dynamic> orders) {
     if (orders.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.inbox_outlined, size: 56, color: (Theme.of(context).brightness == Brightness.dark ? AppTheme.textMuted : AppTheme.textMutedLight).withAlpha(100)),
-            const SizedBox(height: 12),
-            Text('Belum ada pesanan', style: GoogleFonts.outfit(color: (Theme.of(context).brightness == Brightness.dark ? AppTheme.textMuted : AppTheme.textMutedLight), fontSize: 15)),
-          ],
-        ),
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          SizedBox(height: MediaQuery.of(context).size.height * 0.35),
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.inbox_outlined, size: 56, color: (Theme.of(context).brightness == Brightness.dark ? AppTheme.textMuted : AppTheme.textMutedLight).withAlpha(100)),
+                const SizedBox(height: 12),
+                Text('Belum ada pesanan', style: GoogleFonts.outfit(color: (Theme.of(context).brightness == Brightness.dark ? AppTheme.textMuted : AppTheme.textMutedLight), fontSize: 15)),
+              ],
+            ),
+          ),
+        ],
       );
     }
     return ListView.separated(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       itemCount: orders.length,
       separatorBuilder: (context, index) => const SizedBox(height: 10),
@@ -259,15 +278,15 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
 
   String _statusLabel(String status) {
     switch (status) {
-      case 'PENDING': return 'MENUNGGU PAKET';
-      case 'CHECKING': return 'PENGECEKAN';
-      case 'WAITING_PAYMENT': return 'MENUNGGU BAYAR';
-      case 'PAYMENT_REVIEW': return 'REVIEW BAYAR';
-      case 'IN_PROGRESS': return 'SEDANG DIPERBAIKI';
-      case 'TESTING': return 'TESTING & QC';
-      case 'COMPLETED': return 'SELESAI';
-      case 'CANCELLED': return 'DIBATALKAN';
-      default: return status;
+      case 'PENDING': return 'Menunggu Paket';
+      case 'CHECKING': return 'Pengecekan';
+      case 'WAITING_PAYMENT': return 'Menunggu Bayar';
+      case 'PAYMENT_REVIEW': return 'Review Bayar';
+      case 'IN_PROGRESS': return 'Sedang Diperbaiki';
+      case 'TESTING': return 'Testing & QC';
+      case 'COMPLETED': return 'Selesai';
+      case 'CANCELLED': return 'Dibatalkan';
+      default: return status.split('_').map((w) => w[0].toUpperCase() + w.substring(1).toLowerCase()).join(' ');
     }
   }
 

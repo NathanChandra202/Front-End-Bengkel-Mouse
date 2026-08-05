@@ -390,7 +390,7 @@ class _AdminTransactionDetailScreenState extends State<AdminTransactionDetailScr
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
-        status,
+        status.split('_').map((w) => w[0].toUpperCase() + w.substring(1).toLowerCase()).join(' '),
         style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: color),
       ),
     );

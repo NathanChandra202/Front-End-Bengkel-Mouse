@@ -62,17 +62,14 @@ class _BookingScreenState extends State<BookingScreen> {
 
     setState(() => _submitting = true);
     try {
-      await ApiService.createBooking({
+      final booking = await ApiService.createBookingAndReturn({
         'mouseName': '$brand $model',
         'issue': _selectedCategories.join(', '),
         'details': _detailsCtrl.text.trim(),
         'categories': _selectedCategories,
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Booking berhasil dibuat!')),
-        );
-        context.go('/orders');
+        _showBookingSuccessSheet(booking);
       }
     } catch (e) {
       if (mounted) {
@@ -83,6 +80,31 @@ class _BookingScreenState extends State<BookingScreen> {
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
+  }
+
+  void _showBookingSuccessSheet(Map<String, dynamic> booking) {
+    final bookingId = booking['id'] ?? '';
+    final shortId = bookingId.length > 8 ? 'BM-${bookingId.substring(0, 8).toUpperCase()}' : 'BM-$bookingId';
+    final mouseName = booking['mouseName'] ?? '-';
+    final issue = booking['issue'] ?? '-';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      isDismissible: false,
+      enableDrag: false,
+      builder: (ctx) => _BookingSuccessSheet(
+        bookingId: shortId,
+        rawBookingId: bookingId,
+        mouseName: mouseName,
+        issue: issue,
+        onViewOrders: () {
+          Navigator.of(ctx).pop();
+          context.go('/orders');
+        },
+      ),
+    );
   }
 
   @override
@@ -545,4 +567,185 @@ class _BookingScreenState extends State<BookingScreen> {
   }
 
   Widget _label(String t) => Text(t, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500, color: Theme.of(context).colorScheme.onSurface));
+}
+
+class _BookingSuccessSheet extends StatefulWidget {
+  final String bookingId;
+  final String rawBookingId;
+  final String mouseName;
+  final String issue;
+  final VoidCallback onViewOrders;
+
+  const _BookingSuccessSheet({
+    required this.bookingId,
+    required this.rawBookingId,
+    required this.mouseName,
+    required this.issue,
+    required this.onViewOrders,
+  });
+
+  @override
+  State<_BookingSuccessSheet> createState() => _BookingSuccessSheetState();
+}
+
+class _BookingSuccessSheetState extends State<_BookingSuccessSheet> {
+  Map<String, dynamic>? _storeInfo;
+  bool _loadingStore = true;
+  bool _copied = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStoreInfo();
+  }
+
+  Future<void> _loadStoreInfo() async {
+    try {
+      final info = await ApiService.getStoreInfo();
+      if (mounted) setState(() { _storeInfo = info; _loadingStore = false; });
+    } catch (_) {
+      if (mounted) setState(() => _loadingStore = false);
+    }
+  }
+
+  String _buildTemplate() {
+    final receiverName = _storeInfo?['receiverName'] ?? _storeInfo?['name'] ?? 'Bengkel Mouse';
+    final address = _storeInfo?['address'] ?? '-';
+    final phone = _storeInfo?['phone'] ?? _storeInfo?['whatsapp'] ?? '-';
+    return '''Kepada: $receiverName
+Alamat: $address
+No. HP: $phone
+
+ID Booking: ${widget.bookingId}
+Nama Mouse: ${widget.mouseName}
+Keluhan: ${widget.issue}''';
+  }
+
+  Future<void> _copyTemplate() async {
+    await Clipboard.setData(ClipboardData(text: _buildTemplate()));
+    if (mounted) {
+      setState(() => _copied = true);
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) setState(() => _copied = false);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final mutedColor = isDark ? AppTheme.textMuted : AppTheme.textMutedLight;
+
+    return PopScope(
+      canPop: false,
+      child: Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: EdgeInsets.fromLTRB(24, 20, 24, MediaQuery.of(context).padding.bottom + 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Handle bar
+          Center(
+            child: Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(color: mutedColor.withAlpha(60), borderRadius: BorderRadius.circular(2)),
+            ),
+          ),
+          const SizedBox(height: 20),
+          // Success header
+          Center(
+            child: Column(
+              children: [
+                Container(
+                  width: 64, height: 64,
+                  decoration: BoxDecoration(
+                    color: AppTheme.statusDone.withAlpha(30),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppTheme.statusDone.withAlpha(80)),
+                  ),
+                  child: const Icon(Icons.check_circle_outline_rounded, color: AppTheme.statusDone, size: 32),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Booking Berhasil!',
+                  style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'ID: ${widget.bookingId}',
+                  style: GoogleFonts.outfit(fontSize: 13, color: mutedColor, letterSpacing: 0.4),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          // Shipping template section
+          Text(
+            'Template Pengiriman',
+            style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Tempel info ini di paket yang akan kamu kirim.',
+            style: GoogleFonts.outfit(fontSize: 12, color: mutedColor),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppTheme.primaryColor.withAlpha(60)),
+            ),
+            child: _loadingStore
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: SizedBox(
+                        width: 20, height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primaryColor),
+                      ),
+                    ),
+                  )
+                : Text(
+                    _buildTemplate(),
+                    style: GoogleFonts.robotoMono(fontSize: 12, color: Theme.of(context).colorScheme.onSurface, height: 1.8),
+                  ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 44,
+            child: OutlinedButton.icon(
+              onPressed: _loadingStore ? null : _copyTemplate,
+              icon: Icon(_copied ? Icons.check_rounded : Icons.copy_outlined, size: 18),
+              label: Text(
+                _copied ? 'Tersalin!' : 'Salin Template',
+                style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w600),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: _copied ? AppTheme.statusDone : AppTheme.primaryColor,
+                side: BorderSide(color: (_copied ? AppTheme.statusDone : AppTheme.primaryColor).withAlpha(120)),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton(
+              onPressed: widget.onViewOrders,
+              child: Text('Lihat Pesanan', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600)),
+            ),
+          ),
+        ],
+      ),
+    ),
+    );
+  }
 }

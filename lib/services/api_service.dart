@@ -208,4 +208,43 @@
       var response = await request.send();
       if (response.statusCode != 200) throw Exception('Failed to upload payment proof');
     }
+
+    static Future<Map<String, dynamic>> createBookingAndReturn(Map<String, dynamic> data) async {
+      final token = await getToken();
+      final response = await http.post(
+        Uri.parse('$baseUrl/bookings'),
+        headers: _headers(token),
+        body: jsonEncode(data),
+      );
+      if (response.statusCode == 201) return jsonDecode(response.body);
+      throw Exception(jsonDecode(response.body)['error'] ?? 'Failed to create booking');
+    }
+
+    static Future<Map<String, dynamic>> createReview(String bookingId, int rating, String comment) async {
+      final token = await getToken();
+      final response = await http.post(
+        Uri.parse('$baseUrl/bookings/$bookingId/review'),
+        headers: _headers(token),
+        body: jsonEncode({'rating': rating, 'comment': comment}),
+      );
+      if (response.statusCode == 201) return jsonDecode(response.body);
+      throw Exception(jsonDecode(response.body)['error'] ?? 'Gagal membuat ulasan');
+    }
+
+    static Future<Map<String, dynamic>?> getReview(String bookingId) async {
+      final token = await getToken();
+      final response = await http.get(
+        Uri.parse('$baseUrl/bookings/$bookingId/review'),
+        headers: _headers(token),
+      );
+      if (response.statusCode == 200) return jsonDecode(response.body);
+      if (response.statusCode == 404) return null;
+      return null;
+    }
+
+    static Future<Map<String, dynamic>> getStoreInfo() async {
+      final response = await http.get(Uri.parse('$baseUrl/store'));
+      if (response.statusCode == 200) return jsonDecode(response.body);
+      return {};
+    }
   }

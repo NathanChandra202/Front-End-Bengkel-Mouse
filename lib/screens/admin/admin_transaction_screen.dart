@@ -147,7 +147,7 @@ class _AdminTransactionScreenState extends State<AdminTransactionScreen> {
         border: Border.all(color: color.withAlpha(50)),
       ),
       child: Text(
-        status,
+        status.split('_').map((w) => w[0].toUpperCase() + w.substring(1).toLowerCase()).join(' '),
         style: GoogleFonts.outfit(
           fontSize: 11,
           fontWeight: FontWeight.w600,
