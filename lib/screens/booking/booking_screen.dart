@@ -613,9 +613,9 @@ class _BookingSuccessSheetState extends State<_BookingSuccessSheet> {
   String _buildTemplate() {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final senderName = userProvider.name.isNotEmpty ? userProvider.name : 'Pengguna';
-    final receiverName = _storeInfo?['receiverName'] ?? _storeInfo?['name'] ?? 'Bengkel Mouse';
-    final address = _storeInfo?['address'] ?? '-';
-    final phone = _storeInfo?['phone'] ?? _storeInfo?['whatsapp'] ?? '-';
+    const receiverName = 'Bengkel Mouse';
+    const address = 'Jl. H. Hasan No.26, RT.3/RW.10, Baru, Kec. Pasar Rebo, Jakarta Timur 13780';
+    const phone = '+62 838-1169-1729';
     return '''Pengirim: $senderName
 
 Kepada: $receiverName
@@ -737,6 +737,44 @@ Keluhan: ${widget.issue}''';
               style: OutlinedButton.styleFrom(
                 foregroundColor: _copied ? AppTheme.statusDone : AppTheme.primaryColor,
                 side: BorderSide(color: (_copied ? AppTheme.statusDone : AppTheme.primaryColor).withAlpha(120)),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 44,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                // Show template again in a dialog
+                showDialog(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                    title: Text('Template Resi', style: GoogleFonts.outfit(fontWeight: FontWeight.w700)),
+                    content: SingleChildScrollView(
+                      child: Text(
+                        _buildTemplate(),
+                        style: GoogleFonts.robotoMono(fontSize: 12, height: 1.8),
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(),
+                        child: Text('Tutup', style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              icon: const Icon(Icons.receipt_long_outlined, size: 18),
+              label: Text(
+                'Lihat Template Resi',
+                style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w600),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: mutedColor,
+                side: BorderSide(color: mutedColor.withAlpha(80)),
               ),
             ),
           ),

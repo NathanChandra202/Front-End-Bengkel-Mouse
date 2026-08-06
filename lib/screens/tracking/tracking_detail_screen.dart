@@ -85,10 +85,12 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final shortId = widget.bookingId.length > 8 ? 'BM-${widget.bookingId.substring(0, 8).toUpperCase()}' : 'BM-${widget.bookingId.toUpperCase()}';
+    
     if (_isLoading) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(widget.bookingId, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600)),
+          title: Text(shortId, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600)),
           leading: IconButton(
             icon: Icon(Icons.arrow_back_rounded, color: Theme.of(context).colorScheme.onSurface),
             onPressed: () => Navigator.of(context).pop(),
@@ -101,7 +103,7 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
     if (_booking == null) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(widget.bookingId, style: GoogleFonts.outfit(fontSize: 16)),
+          title: Text(shortId, style: GoogleFonts.outfit(fontSize: 16)),
           leading: IconButton(icon: const Icon(Icons.arrow_back_rounded), onPressed: () => Navigator.of(context).pop()),
         ),
         body: const Center(child: Text('Data booking tidak ditemukan')),
@@ -126,7 +128,7 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(
-            widget.bookingId,
+            shortId,
             style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface, letterSpacing: 0.3),
           ),
           leading: IconButton(
