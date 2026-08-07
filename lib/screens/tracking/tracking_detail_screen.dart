@@ -22,14 +22,16 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
   bool _reviewLoading = true;
 
   static const _statusToStep = {
-    'PENDING':         0,
-    'CHECKING':        1,
-    'WAITING_PAYMENT': 2,
-    'PAYMENT_REVIEW':  3,
-    'IN_PROGRESS':     4,
-    'TESTING':         5,
-    'COMPLETED':       6,
-    'CANCELLED':       0,
+    'PENDING':             0,
+    'CHECKING':            1,
+    'WAITING_DP':          2,
+    'DP_REVIEW':           3,
+    'IN_PROGRESS':         4,
+    'TESTING':             5,
+    'WAITING_SETTLEMENT':  6,
+    'SETTLEMENT_REVIEW':   7,
+    'COMPLETED':           8,
+    'CANCELLED':           0,
   };
 
   @override
@@ -116,10 +118,12 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
     final steps = [
       _TrackStep('Menunggu Paket', 'Booking dibuat. Kirimkan mouse kamu ke bengkel kami.', AppTheme.statusWaiting, Icons.local_shipping_outlined),
       _TrackStep('Pengecekan', 'Mouse diterima dan sedang dicek oleh teknisi.', AppTheme.statusChecking, Icons.search_outlined),
-      _TrackStep('Menunggu Pembayaran', 'Estimasi biaya sudah dikirim. Mohon lakukan transfer.', AppTheme.statusPayment, Icons.payment_outlined),
-      _TrackStep('Review Pembayaran', 'Bukti transfer sedang diverifikasi admin.', AppTheme.statusReview, Icons.verified_outlined),
-      _TrackStep('Sedang Diperbaiki', 'Teknisi sedang mengerjakan mouse kamu.', AppTheme.statusRepairing, Icons.build_outlined),
-      _TrackStep('Testing & QC', 'Mouse sedang diuji sebelum dikirim balik.', AppTheme.statusQC, Icons.science_outlined),
+      _TrackStep('DP', 'Estimasi biaya DP sudah dikirim. Mohon lakukan transfer.', AppTheme.statusPayment, Icons.payment_outlined),
+      _TrackStep('Review DP', 'Bukti transfer DP sedang diverifikasi admin.', AppTheme.statusReview, Icons.verified_outlined),
+      _TrackStep('Perbaikan', 'Teknisi sedang mengerjakan mouse kamu.', AppTheme.statusRepairing, Icons.build_outlined),
+      _TrackStep('Testing & QC', 'Mouse sedang diuji sebelum final pembayaran.', AppTheme.statusQC, Icons.science_outlined),
+      _TrackStep('Pelunasan', 'Silakan lakukan pelunasan pembayaran akhir.', AppTheme.statusPayment, Icons.receipt_long_outlined),
+      _TrackStep('Review Pelunasan', 'Bukti pelunasan sedang diverifikasi admin.', AppTheme.statusReview, Icons.task_alt_outlined),
       _TrackStep('Selesai', 'Mouse sudah beres dan dikirim kembali ke kamu.', AppTheme.statusDone, Icons.check_circle_outline_rounded),
     ];
 
@@ -150,7 +154,7 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildMouseCard(context, _booking!, status),
-                if (status == 'WAITING_PAYMENT') _buildPaymentBanner(context),
+                if (status == 'WAITING_DP' || status == 'WAITING_SETTLEMENT') _buildPaymentBanner(context, status),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
                   child: Text(
@@ -253,7 +257,8 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
     );
   }
 
-  Widget _buildPaymentBanner(BuildContext context) {
+  Widget _buildPaymentBanner(BuildContext context, String status) {
+    final isSettlement = status == 'WAITING_SETTLEMENT';
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       padding: const EdgeInsets.all(16),
@@ -274,7 +279,7 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Tagihan Menunggu Pembayaran',
+                  isSettlement ? 'Tagihan Pelunasan' : 'Tagihan DP',
                   style: GoogleFonts.outfit(fontWeight: FontWeight.w700, color: Colors.white, fontSize: 14),
                 ),
                 Text(
@@ -477,10 +482,12 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
     switch (status) {
       case 'PENDING': return 'Menunggu Paket';
       case 'CHECKING': return 'Pengecekan';
-      case 'WAITING_PAYMENT': return 'Menunggu Pembayaran';
-      case 'PAYMENT_REVIEW': return 'Review Pembayaran';
-      case 'IN_PROGRESS': return 'Sedang Diperbaiki';
+      case 'WAITING_DP': return 'DP';
+      case 'DP_REVIEW': return 'Review DP';
+      case 'IN_PROGRESS': return 'Perbaikan';
       case 'TESTING': return 'Testing & QC';
+      case 'WAITING_SETTLEMENT': return 'Pelunasan';
+      case 'SETTLEMENT_REVIEW': return 'Review Pelunasan';
       case 'COMPLETED': return 'Selesai';
       case 'CANCELLED': return 'Dibatalkan';
       default: return status.split('_').map((w) => w[0].toUpperCase() + w.substring(1).toLowerCase()).join(' ');
@@ -491,10 +498,12 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
     switch (status) {
       case 'PENDING': return AppTheme.statusWaiting;
       case 'CHECKING': return AppTheme.statusChecking;
-      case 'WAITING_PAYMENT': return AppTheme.statusPayment;
-      case 'PAYMENT_REVIEW': return AppTheme.statusReview;
+      case 'WAITING_DP': return AppTheme.statusPayment;
+      case 'DP_REVIEW': return AppTheme.statusReview;
       case 'IN_PROGRESS': return AppTheme.statusRepairing;
       case 'TESTING': return AppTheme.statusQC;
+      case 'WAITING_SETTLEMENT': return AppTheme.statusPayment;
+      case 'SETTLEMENT_REVIEW': return AppTheme.statusReview;
       case 'COMPLETED': return AppTheme.statusDone;
       case 'CANCELLED': return Colors.red;
       default: return Colors.grey;
