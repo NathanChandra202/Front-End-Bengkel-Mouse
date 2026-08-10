@@ -154,7 +154,7 @@ class _AdminTransactionDetailScreenState extends State<AdminTransactionDetailScr
                             _trx!['totalAmount'] != null ? 'Rp ${_formatRp((_trx!['totalAmount'] ?? 0).toInt() + (_trx!['uniqueCode'] ?? 0).toInt())}' : 'Belum Diset',
                             style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w600),
                           ),
-                          if (_trx!['status'] == 'CHECKING' || _trx!['status'] == 'PENDING' || _trx!['status'] == 'TESTING')
+                          if (_trx!['status'] == 'CHECKING' || _trx!['status'] == 'TESTING')
                             IconButton(
                               icon: const Icon(Icons.edit, size: 16),
                               onPressed: _setAmountDialog,
