@@ -8,8 +8,63 @@ import '../../providers/theme_provider.dart';
 import '../../providers/user_provider.dart';
 
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Cek alamat setiap kali masuk home (login baru maupun sudah login)
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkAddress());
+  }
+
+  void _checkAddress() {
+    final userProv = Provider.of<UserProvider>(context, listen: false);
+    if (!userProv.isLoggedIn || userProv.isAdmin) return;
+    final address = userProv.address;
+    final msg = address.trim().isEmpty
+        ? 'Alamat kamu belum diisi. Lengkapi profil sekarang agar mouse kamu bisa dikirim kembali setelah selesai diperbaiki.'
+        : 'Pastikan alamat kamu sudah benar di profil untuk pengiriman mouse kepulangan.';
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(
+              address.trim().isEmpty ? Icons.warning_amber_rounded : Icons.location_on_outlined,
+              color: address.trim().isEmpty ? Colors.orange : AppTheme.primaryColor,
+              size: 22,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                address.trim().isEmpty ? 'Alamat Belum Diisi' : 'Cek Alamat Kamu',
+                style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+        ),
+        content: Text(msg, style: GoogleFonts.outfit(fontSize: 13, height: 1.6)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text('Nanti', style: GoogleFonts.outfit(color: Theme.of(context).colorScheme.onSurface.withAlpha(150))),
+          ),
+          ElevatedButton(
+            onPressed: () { Navigator.of(ctx).pop(); context.push('/profile'); },
+            child: Text('Ke Profil', style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -43,7 +43,6 @@ class _LoginScreenState extends State<LoginScreen> {
           context.go('/admin');
         } else {
           context.go('/home');
-          _checkAddress(context, data['user']);
         }
       }
     } catch (e) {
@@ -55,50 +54,12 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     }
   }
-
-  void _checkAddress(BuildContext context, Map<String, dynamic> user) {
-    final address = (user['address'] as String?) ?? '';
-    final msg = address.trim().isEmpty
-        ? 'Alamat kamu belum diisi. Lengkapi profil sekarang agar pengiriman mouse kembali bisa diproses.'
-        : 'Pastikan alamat kamu sudah benar di profil untuk pengiriman mouse kepulangan.';
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (!mounted) return;
-      showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Row(
-            children: [
-              Icon(
-                address.trim().isEmpty ? Icons.warning_amber_rounded : Icons.location_on_outlined,
-                color: address.trim().isEmpty ? Colors.orange : AppTheme.primaryColor,
-                size: 22,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                address.trim().isEmpty ? 'Alamat Belum Diisi' : 'Cek Alamat Kamu',
-                style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700),
-              ),
-            ],
-          ),
-          content: Text(
-            msg,
-            style: GoogleFonts.outfit(fontSize: 13, height: 1.6),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: Text('Nanti', style: GoogleFonts.outfit(color: Theme.of(context).colorScheme.onSurface.withAlpha(150))),
-            ),
-            ElevatedButton(
-              onPressed: () { Navigator.of(ctx).pop(); context.push('/profile'); },
-              child: Text('Ke Profil', style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
-            ),
-          ],
-        ),
-      );
-    });
+        setState(() => _loading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+        );
+      }
+    }
   }
 
   Future<void> _signInWithGoogle() async {
@@ -126,7 +87,6 @@ class _LoginScreenState extends State<LoginScreen> {
           context.go('/admin');
         } else {
           context.go('/home');
-          _checkAddress(context, data['user']);
         }
       }
     } on GoogleSignInException catch (e) {
