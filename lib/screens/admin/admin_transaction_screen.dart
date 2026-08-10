@@ -125,15 +125,25 @@ class _AdminTransactionScreenState extends State<AdminTransactionScreen> {
     switch (status) {
       case 'PENDING':
       case 'CHECKING':
-      case 'WAITING_PAYMENT':
         color = Colors.orange;
+        break;
+      case 'WAITING_DP':
+      case 'DP_REVIEW':
+        color = Colors.amber;
         break;
       case 'IN_PROGRESS':
       case 'TESTING':
         color = Colors.blue;
         break;
+      case 'WAITING_SETTLEMENT':
+      case 'SETTLEMENT_REVIEW':
+        color = Colors.purple;
+        break;
       case 'COMPLETED':
         color = Colors.green;
+        break;
+      case 'CANCELLED':
+        color = Colors.red;
         break;
       default:
         color = Colors.grey;

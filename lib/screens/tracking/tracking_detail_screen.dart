@@ -51,7 +51,12 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
   Future<void> _silentRefresh() async {
     try {
       final data = await ApiService.getBookingById(widget.bookingId);
-      if (mounted) setState(() => _booking = data);
+      if (!mounted) return;
+      final wasCompleted = _booking?['status'] == 'COMPLETED';
+      final nowCompleted = data['status'] == 'COMPLETED';
+      setState(() => _booking = data);
+      // If just became COMPLETED, fetch review
+      if (!wasCompleted && nowCompleted) _fetchReview();
     } catch (_) {}
   }
 
@@ -85,6 +90,50 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
     }
   }
 
+  void _showTemplateDialog() {
+    final senderName = _booking?['user']?['name'] ?? 'Pengguna';
+    const receiverName = 'Bengkel Mouse';
+    const address = 'Jl. H. Hasan No.26, RT.3/RW.10, Baru, Kec. Pasar Rebo, Jakarta Timur 13780';
+    const phone = '+62 838-1169-1729';
+    final mouseName = _booking?['mouseName'] ?? '-';
+    final issue = _booking?['issue'] ?? '-';
+
+    final template = '''Pengirim: $senderName\n\nKepada: $receiverName\nAlamat: $address\nNo. HP: $phone\n\nID Booking: ${widget.bookingId}\nNama Mouse: $mouseName\nKeluhan: $issue''';
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: Text('Template Pengiriman', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold)),
+        content: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            border: Border.all(color: AppTheme.primaryColor.withAlpha(60)),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: SelectableText(template, style: GoogleFonts.robotoMono(fontSize: 12)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text('Tutup', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+          ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryColor, foregroundColor: Colors.white),
+            icon: const Icon(Icons.copy, size: 16),
+            label: const Text('Salin'),
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: template));
+              Navigator.of(ctx).pop();
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Template tersalin!')));
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final shortId = widget.bookingId.length > 8 ? 'BM-${widget.bookingId.substring(0, 8).toUpperCase()}' : 'BM-${widget.bookingId.toUpperCase()}';
@@ -92,7 +141,7 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
     if (_isLoading) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(shortId, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600)),
+          title: Text('Booking ID: $shortId', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600)),
           leading: IconButton(
             icon: Icon(Icons.arrow_back_rounded, color: Theme.of(context).colorScheme.onSurface),
             onPressed: () => Navigator.of(context).pop(),
@@ -105,7 +154,7 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
     if (_booking == null) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(shortId, style: GoogleFonts.outfit(fontSize: 16)),
+          title: Text('Booking ID: $shortId', style: GoogleFonts.outfit(fontSize: 16)),
           leading: IconButton(icon: const Icon(Icons.arrow_back_rounded), onPressed: () => Navigator.of(context).pop()),
         ),
         body: const Center(child: Text('Data booking tidak ditemukan')),
@@ -132,7 +181,7 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(
-            shortId,
+            'Booking ID: $shortId',
             style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface, letterSpacing: 0.3),
           ),
           leading: IconButton(
@@ -154,7 +203,7 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildMouseCard(context, _booking!, status),
-                if (status == 'WAITING_DP' || status == 'WAITING_SETTLEMENT') _buildPaymentBanner(context, status),
+                _buildActionBanner(context, _booking!, status),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
                   child: Text(
@@ -257,58 +306,134 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
     );
   }
 
-  Widget _buildPaymentBanner(BuildContext context, String status) {
-    final isSettlement = status == 'WAITING_SETTLEMENT';
+  String _formatRp(dynamic amount) {
+    if (amount == null) return 'Belum ditetapkan';
+    final n = (amount as num).toInt();
+    return 'Rp ${n.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
+  }
+
+  Widget _buildActionBanner(BuildContext context, Map<String, dynamic> booking, String status) {
+    final baseAmount = booking['totalAmount'] != null ? (booking['totalAmount'] as num).toInt() : null;
+    final uniqueCode = booking['uniqueCode'] != null ? (booking['uniqueCode'] as num).toInt() : 0;
+    final totalPay = baseAmount != null ? baseAmount + uniqueCode : null;
+
+    // === WAITING_DP — user must pay DP ===
+    if (status == 'WAITING_DP') {
+      return _bannerCard(
+        context,
+        icon: Icons.payment_rounded,
+        gradient: [const Color(0xFF7C3AED), const Color(0xFF9D4EDD)],
+        title: 'Tagihan DP',
+        subtitle: totalPay != null
+            ? '${_formatRp(baseAmount)} + kode unik ${_formatRp(uniqueCode)} = ${_formatRp(totalPay)}'
+            : 'Admin akan segera menetapkan jumlah DP.',
+        actionLabel: 'Bayar Sekarang →',
+        onTap: () => context.push('/payment/${widget.bookingId}'),
+      );
+    }
+
+    // === DP_REVIEW — waiting for admin to verify ===
+    if (status == 'DP_REVIEW') {
+      return _bannerCard(
+        context,
+        icon: Icons.hourglass_top_rounded,
+        gradient: [const Color(0xFF92400E), const Color(0xFFB45309)],
+        title: 'Bukti DP Dikirim',
+        subtitle: 'Admin sedang memverifikasi bukti transfer DP kamu. Proses biasanya 1×24 jam.',
+        actionLabel: null,
+        onTap: null,
+      );
+    }
+
+    // === WAITING_SETTLEMENT — user must pay remaining ===
+    if (status == 'WAITING_SETTLEMENT') {
+      return _bannerCard(
+        context,
+        icon: Icons.receipt_long_rounded,
+        gradient: [const Color(0xFF065F46), const Color(0xFF059669)],
+        title: 'Tagihan Pelunasan',
+        subtitle: totalPay != null
+            ? '${_formatRp(baseAmount)} + kode unik ${_formatRp(uniqueCode)} = ${_formatRp(totalPay)}'
+            : 'Admin akan segera menetapkan jumlah pelunasan.',
+        actionLabel: 'Lunasi Sekarang →',
+        onTap: () => context.push('/payment/${widget.bookingId}'),
+      );
+    }
+
+    // === SETTLEMENT_REVIEW — waiting for admin to verify ===
+    if (status == 'SETTLEMENT_REVIEW') {
+      return _bannerCard(
+        context,
+        icon: Icons.hourglass_top_rounded,
+        gradient: [const Color(0xFF065F46), const Color(0xFF059669)],
+        title: 'Bukti Pelunasan Dikirim',
+        subtitle: 'Admin sedang memverifikasi bukti pelunasan kamu. Hampir selesai!',
+        actionLabel: null,
+        onTap: null,
+      );
+    }
+
+    // === CANCELLED ===
+    if (status == 'CANCELLED') {
+      return _bannerCard(
+        context,
+        icon: Icons.cancel_outlined,
+        gradient: [const Color(0xFF7F1D1D), const Color(0xFFB91C1C)],
+        title: 'Pesanan Dibatalkan',
+        subtitle: 'Pesanan ini telah dibatalkan. Hubungi kami jika ada pertanyaan.',
+        actionLabel: null,
+        onTap: null,
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+
+  Widget _bannerCard(
+    BuildContext context, {
+    required IconData icon,
+    required List<Color> gradient,
+    required String title,
+    required String subtitle,
+    required String? actionLabel,
+    required VoidCallback? onTap,
+  }) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppTheme.primaryDark, AppTheme.primaryColor.withAlpha(200)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        gradient: LinearGradient(colors: gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         children: [
-          const Icon(Icons.payment_rounded, color: Colors.white, size: 28),
+          Icon(icon, color: Colors.white, size: 26),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  isSettlement ? 'Tagihan Pelunasan' : 'Tagihan DP',
-                  style: GoogleFonts.outfit(fontWeight: FontWeight.w700, color: Colors.white, fontSize: 14),
-                ),
-                Text(
-                  'Transfer sesuai nominal + kode unik.',
-                  style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12),
-                ),
+                Text(title, style: GoogleFonts.outfit(fontWeight: FontWeight.w700, color: Colors.white, fontSize: 14)),
+                const SizedBox(height: 3),
+                Text(subtitle, style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12, height: 1.4)),
               ],
             ),
           ),
-          const SizedBox(width: 10),
-          GestureDetector(
-            onTap: () => context.push('/payment/${widget.bookingId}'),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white.withAlpha(40),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.white.withAlpha(80)),
-              ),
-              child: Text(
-                'Bayar →',
-                style: GoogleFonts.outfit(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
+          if (actionLabel != null && onTap != null) ...[
+            const SizedBox(width: 10),
+            GestureDetector(
+              onTap: onTap,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(40),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.white.withAlpha(80)),
                 ),
+                child: Text(actionLabel, style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -384,6 +509,21 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
                           height: 1.5,
                         ),
                       ),
+                      if (step.label == 'Menunggu Paket')
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: InkWell(
+                            onTap: _showTemplateDialog,
+                            borderRadius: BorderRadius.circular(4),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                              child: Text(
+                                'Lihat Template Resi',
+                                style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.primaryColor, decoration: TextDecoration.underline),
+                              ),
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),

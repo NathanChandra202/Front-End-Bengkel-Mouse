@@ -24,7 +24,11 @@ class _PaymentInstructionScreenState extends State<PaymentInstructionScreen> {
 
   int _baseAmount = 0;
   int _uniqueCode = 0;
+  String _bookingStatus = '';
   int get _totalAmount => _baseAmount + _uniqueCode;
+
+  bool get _isSettlement => _bookingStatus == 'WAITING_SETTLEMENT';
+  String get _paymentLabel => _isSettlement ? 'Pelunasan' : 'DP';
 
   final _banks = const [
     _BankInfo('BCA', '1234567890', 'PT Bengkel Mouse Dua Enam'),
@@ -47,6 +51,7 @@ class _PaymentInstructionScreenState extends State<PaymentInstructionScreen> {
         setState(() {
           _baseAmount = rawAmount != null ? (rawAmount as num).toInt() : 0;
           _uniqueCode = rawUnique != null ? (rawUnique as num).toInt() : 0;
+          _bookingStatus = data['status'] ?? '';
           _isLoadingBooking = false;
         });
       }
@@ -142,7 +147,7 @@ class _PaymentInstructionScreenState extends State<PaymentInstructionScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(
-            'Instruksi Pembayaran',
+            'Pembayaran $_paymentLabel',
             style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface),
           ),
           leading: IconButton(
@@ -203,7 +208,7 @@ class _PaymentInstructionScreenState extends State<PaymentInstructionScreen> {
                       ),
                       child: Column(
                         children: [
-                          _billRow('Jasa Perbaikan', 'Rp ${_formatRp(_baseAmount)}'),
+                          _billRow('Biaya $_paymentLabel', 'Rp ${_formatRp(_baseAmount)}'),
                           const SizedBox(height: 12),
                           Container(height: 1, color: Theme.of(context).dividerTheme.color!),
                           const SizedBox(height: 12),
@@ -366,7 +371,7 @@ class _PaymentInstructionScreenState extends State<PaymentInstructionScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Total Pembayaran',
+            'Total $_paymentLabel',
             style: GoogleFonts.outfit(fontSize: 13, color: Colors.white70),
           ),
           const SizedBox(height: 6),

@@ -20,7 +20,8 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
   Timer? _refreshTimer;
 
   static const _activeStatuses = {
-    'PENDING', 'CHECKING', 'WAITING_PAYMENT', 'PAYMENT_REVIEW', 'IN_PROGRESS', 'TESTING',
+    'PENDING', 'CHECKING', 'WAITING_DP', 'DP_REVIEW', 'IN_PROGRESS', 'TESTING',
+    'WAITING_SETTLEMENT', 'SETTLEMENT_REVIEW',
   };
 
   @override
@@ -273,10 +274,12 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
     switch (status) {
       case 'PENDING': return 'Menunggu Paket';
       case 'CHECKING': return 'Pengecekan';
-      case 'WAITING_PAYMENT': return 'Menunggu Bayar';
-      case 'PAYMENT_REVIEW': return 'Review Bayar';
+      case 'WAITING_DP': return 'Menunggu DP';
+      case 'DP_REVIEW': return 'Review DP';
       case 'IN_PROGRESS': return 'Sedang Diperbaiki';
       case 'TESTING': return 'Testing & QC';
+      case 'WAITING_SETTLEMENT': return 'Menunggu Pelunasan';
+      case 'SETTLEMENT_REVIEW': return 'Review Pelunasan';
       case 'COMPLETED': return 'Selesai';
       case 'CANCELLED': return 'Dibatalkan';
       default: return status.split('_').map((w) => w[0].toUpperCase() + w.substring(1).toLowerCase()).join(' ');
@@ -287,10 +290,12 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
     switch (status) {
       case 'PENDING': return AppTheme.statusWaiting;
       case 'CHECKING': return AppTheme.statusChecking;
-      case 'WAITING_PAYMENT': return AppTheme.statusPayment;
-      case 'PAYMENT_REVIEW': return AppTheme.statusReview;
+      case 'WAITING_DP': return AppTheme.statusPayment;
+      case 'DP_REVIEW': return AppTheme.statusReview;
       case 'IN_PROGRESS': return AppTheme.statusRepairing;
       case 'TESTING': return AppTheme.statusQC;
+      case 'WAITING_SETTLEMENT': return AppTheme.statusPayment;
+      case 'SETTLEMENT_REVIEW': return AppTheme.statusReview;
       case 'COMPLETED': return AppTheme.statusDone;
       case 'CANCELLED': return Colors.red;
       default: return Colors.grey;

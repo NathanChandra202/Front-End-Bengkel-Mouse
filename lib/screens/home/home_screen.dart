@@ -26,10 +26,12 @@ class _HomeScreenState extends State<HomeScreen> {
   void _checkAddress() {
     final userProv = Provider.of<UserProvider>(context, listen: false);
     if (!userProv.isLoggedIn || userProv.isAdmin) return;
+
+    // Hanya tampilkan kalau alamat benar-benar kosong
+    // Kalau sudah ada alamat, jangan ganggu tiap kali balik ke home
     final address = userProv.address;
-    final msg = address.trim().isEmpty
-        ? 'Alamat kamu belum diisi. Lengkapi profil sekarang agar mouse kamu bisa dikirim kembali setelah selesai diperbaiki.'
-        : 'Pastikan alamat kamu sudah benar di profil untuk pengiriman mouse kepulangan.';
+    if (address.trim().isNotEmpty) return;
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -37,21 +39,20 @@ class _HomeScreenState extends State<HomeScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
-            Icon(
-              address.trim().isEmpty ? Icons.warning_amber_rounded : Icons.location_on_outlined,
-              color: address.trim().isEmpty ? Colors.orange : AppTheme.primaryColor,
-              size: 22,
-            ),
+            const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 22),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                address.trim().isEmpty ? 'Alamat Belum Diisi' : 'Cek Alamat Kamu',
+                'Alamat Belum Diisi',
                 style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700),
               ),
             ),
           ],
         ),
-        content: Text(msg, style: GoogleFonts.outfit(fontSize: 13, height: 1.6)),
+        content: Text(
+          'Alamat kamu belum diisi. Lengkapi profil sekarang agar mouse kamu bisa dikirim kembali setelah selesai diperbaiki.',
+          style: GoogleFonts.outfit(fontSize: 13, height: 1.6),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
@@ -63,6 +64,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+    );
+  }
     );
   }
 

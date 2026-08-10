@@ -48,14 +48,16 @@ class _AdminTransactionDetailScreenState extends State<AdminTransactionDetailScr
 
   Future<void> _setAmountDialog() async {
     final ctrl = TextEditingController();
+    final isTesting = _trx!['status'] == 'TESTING';
+    final label = isTesting ? 'Pelunasan' : 'DP';
     await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Set Harga Perbaikan'),
+        title: Text('Set Harga $label', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
         content: TextField(
           controller: ctrl,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(labelText: 'Harga (Rp)'),
+          decoration: InputDecoration(labelText: 'Nominal $label (Rp)'),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
@@ -72,7 +74,7 @@ class _AdminTransactionDetailScreenState extends State<AdminTransactionDetailScr
                 }
               }
             },
-            child: const Text('Simpan'),
+            child: const Text('Kirim Tagihan'),
           ),
         ],
       ),
@@ -152,7 +154,7 @@ class _AdminTransactionDetailScreenState extends State<AdminTransactionDetailScr
                             _trx!['totalAmount'] != null ? 'Rp ${_formatRp((_trx!['totalAmount'] ?? 0).toInt() + (_trx!['uniqueCode'] ?? 0).toInt())}' : 'Belum Diset',
                             style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w600),
                           ),
-                          if (_trx!['status'] == 'CHECKING' || _trx!['status'] == 'PENDING')
+                          if (_trx!['status'] == 'CHECKING' || _trx!['status'] == 'PENDING' || _trx!['status'] == 'TESTING')
                             IconButton(
                               icon: const Icon(Icons.edit, size: 16),
                               onPressed: _setAmountDialog,
@@ -216,21 +218,25 @@ class _AdminTransactionDetailScreenState extends State<AdminTransactionDetailScr
 
   Widget _buildNextStatusButton(String currentStatus) {
     const nextStatus = {
-      'PENDING':         'CHECKING',
-      'CHECKING':        'WAITING_PAYMENT',
-      'WAITING_PAYMENT': 'PAYMENT_REVIEW',
-      'PAYMENT_REVIEW':  'IN_PROGRESS',
-      'IN_PROGRESS':     'TESTING',
-      'TESTING':         'COMPLETED',
+      'PENDING':             'CHECKING',
+      'CHECKING':            'WAITING_DP',
+      'WAITING_DP':          'DP_REVIEW',
+      'DP_REVIEW':           'IN_PROGRESS',
+      'IN_PROGRESS':         'TESTING',
+      'TESTING':             'WAITING_SETTLEMENT',
+      'WAITING_SETTLEMENT':  'SETTLEMENT_REVIEW',
+      'SETTLEMENT_REVIEW':   'COMPLETED',
     };
     const statusLabel = {
-      'PENDING':         'Menunggu Paket',
-      'CHECKING':        'Pengecekan',
-      'WAITING_PAYMENT': 'Menunggu Pembayaran',
-      'PAYMENT_REVIEW':  'Review Pembayaran',
-      'IN_PROGRESS':     'Sedang Diperbaiki',
-      'TESTING':         'Testing & QC',
-      'COMPLETED':       'Selesai',
+      'PENDING':             'Menunggu Paket',
+      'CHECKING':            'Pengecekan',
+      'WAITING_DP':          'Menunggu DP',
+      'DP_REVIEW':           'Review DP',
+      'IN_PROGRESS':         'Sedang Diperbaiki',
+      'TESTING':             'Testing & QC',
+      'WAITING_SETTLEMENT':  'Menunggu Pelunasan',
+      'SETTLEMENT_REVIEW':   'Review Pelunasan',
+      'COMPLETED':           'Selesai',
     };
 
     final next = nextStatus[currentStatus];
@@ -256,8 +262,8 @@ class _AdminTransactionDetailScreenState extends State<AdminTransactionDetailScr
       );
     }
 
-    // Payment review special: show proof must exist
-    if (currentStatus == 'WAITING_PAYMENT' && _trx!['paymentProofUrl'] == null) {
+    // Block advance if waiting for customer payment proof
+    if ((currentStatus == 'WAITING_DP' || currentStatus == 'WAITING_SETTLEMENT') && _trx!['paymentProofUrl'] == null) {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -367,18 +373,25 @@ class _AdminTransactionDetailScreenState extends State<AdminTransactionDetailScr
     switch (status) {
       case 'PENDING':
       case 'CHECKING':
-      case 'WAITING_PAYMENT':
         color = Colors.orange;
         break;
-      case 'PAYMENT_REVIEW':
+      case 'WAITING_DP':
+      case 'DP_REVIEW':
         color = Colors.amber;
         break;
       case 'IN_PROGRESS':
       case 'TESTING':
         color = Colors.blue;
         break;
+      case 'WAITING_SETTLEMENT':
+      case 'SETTLEMENT_REVIEW':
+        color = Colors.purple;
+        break;
       case 'COMPLETED':
         color = Colors.green;
+        break;
+      case 'CANCELLED':
+        color = Colors.red;
         break;
       default:
         color = Colors.grey;

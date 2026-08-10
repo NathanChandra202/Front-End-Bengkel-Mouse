@@ -41,11 +41,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     switch (status) {
       case 'PENDING': return 'Pesanan kamu telah diterima dan menunggu konfirmasi admin.';
       case 'CHECKING': return 'Admin sedang mengecek kondisi mouse kamu.';
-      case 'WAITING_PAYMENT': return 'Estimasi biaya sudah ditetapkan. Silakan lakukan pembayaran.';
-      case 'PAYMENT_REVIEW': return 'Bukti pembayaran sedang diverifikasi oleh admin.';
+      case 'WAITING_DP': return 'Estimasi DP sudah ditetapkan. Silakan lakukan transfer DP.';
+      case 'DP_REVIEW': return 'Bukti DP sedang diverifikasi oleh admin.';
       case 'IN_PROGRESS': return 'Mouse kamu sedang dalam proses perbaikan.';
-      case 'TESTING': return 'Perbaikan selesai, sedang dilakukan pengujian akhir.';
-      case 'COMPLETED': return 'Perbaikan selesai! Mouse siap untuk diambil/dikirim.';
+      case 'TESTING': return 'Perbaikan selesai, sedang dilakukan testing & QC akhir.';
+      case 'WAITING_SETTLEMENT': return 'Testing selesai. Silakan lakukan pelunasan pembayaran.';
+      case 'SETTLEMENT_REVIEW': return 'Bukti pelunasan sedang diverifikasi oleh admin.';
+      case 'COMPLETED': return 'Perbaikan selesai! Mouse siap untuk dikirim kembali.';
       case 'CANCELLED': return 'Pesanan telah dibatalkan.';
       default: return 'Status pesanan diperbarui.';
     }
@@ -55,10 +57,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     switch (status) {
       case 'PENDING': return Icons.hourglass_empty_rounded;
       case 'CHECKING': return Icons.search_rounded;
-      case 'WAITING_PAYMENT': return Icons.payment_rounded;
-      case 'PAYMENT_REVIEW': return Icons.receipt_long_rounded;
+      case 'WAITING_DP': return Icons.payment_rounded;
+      case 'DP_REVIEW': return Icons.receipt_long_rounded;
       case 'IN_PROGRESS': return Icons.build_rounded;
-      case 'TESTING': return Icons.verified_rounded;
+      case 'TESTING': return Icons.science_rounded;
+      case 'WAITING_SETTLEMENT': return Icons.payment_rounded;
+      case 'SETTLEMENT_REVIEW': return Icons.task_alt_rounded;
       case 'COMPLETED': return Icons.check_circle_rounded;
       case 'CANCELLED': return Icons.cancel_rounded;
       default: return Icons.notifications_rounded;
@@ -70,13 +74,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       case 'PENDING':
       case 'CHECKING':
         return Colors.orange;
-      case 'WAITING_PAYMENT':
+      case 'WAITING_DP':
+      case 'DP_REVIEW':
         return Colors.amber.shade700;
-      case 'PAYMENT_REVIEW':
-        return Colors.blue.shade300;
       case 'IN_PROGRESS':
       case 'TESTING':
         return Colors.blue;
+      case 'WAITING_SETTLEMENT':
+      case 'SETTLEMENT_REVIEW':
+        return Colors.purple;
       case 'COMPLETED':
         return Colors.green;
       case 'CANCELLED':
