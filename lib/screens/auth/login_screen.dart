@@ -54,14 +54,6 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     }
   }
-        setState(() => _loading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
-        );
-      }
-    }
-  }
-
   Future<void> _signInWithGoogle() async {
     setState(() => _loading = true);
     try {
