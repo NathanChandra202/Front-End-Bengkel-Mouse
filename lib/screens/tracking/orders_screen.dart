@@ -181,7 +181,12 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Theme.of(context).dividerTheme.color!),
+          border: Border.all(
+            color: (status == 'WAITING_DP' || status == 'WAITING_SETTLEMENT')
+                ? AppTheme.primaryColor.withAlpha(120)
+                : Theme.of(context).dividerTheme.color!,
+            width: (status == 'WAITING_DP' || status == 'WAITING_SETTLEMENT') ? 1.5 : 1,
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -237,18 +242,43 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
             const SizedBox(height: 14),
             Container(height: 1, color: Theme.of(context).dividerTheme.color!),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(Icons.calendar_today_outlined, size: 12, color: (Theme.of(context).brightness == Brightness.dark ? AppTheme.textMuted : AppTheme.textMutedLight)),
-                const SizedBox(width: 5),
-                Text(dateStr, style: GoogleFonts.outfit(fontSize: 12, color: (Theme.of(context).brightness == Brightness.dark ? AppTheme.textMuted : AppTheme.textMutedLight))),
-                const Spacer(),
-                Text(
-                  'Lihat Detail →',
-                  style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.primaryColor),
-                ),
-              ],
-            ),
+            // Bottom row — action jika perlu bayar, atau lihat detail
+            if (status == 'WAITING_DP' || status == 'WAITING_SETTLEMENT')
+              Row(
+                children: [
+                  Icon(Icons.calendar_today_outlined, size: 12, color: (Theme.of(context).brightness == Brightness.dark ? AppTheme.textMuted : AppTheme.textMutedLight)),
+                  const SizedBox(width: 5),
+                  Text(dateStr, style: GoogleFonts.outfit(fontSize: 12, color: (Theme.of(context).brightness == Brightness.dark ? AppTheme.textMuted : AppTheme.textMutedLight))),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () => ctx.push('/payment/$id'),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        status == 'WAITING_SETTLEMENT' ? 'Lunasi →' : 'Bayar DP →',
+                        style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            else
+              Row(
+                children: [
+                  Icon(Icons.calendar_today_outlined, size: 12, color: (Theme.of(context).brightness == Brightness.dark ? AppTheme.textMuted : AppTheme.textMutedLight)),
+                  const SizedBox(width: 5),
+                  Text(dateStr, style: GoogleFonts.outfit(fontSize: 12, color: (Theme.of(context).brightness == Brightness.dark ? AppTheme.textMuted : AppTheme.textMutedLight))),
+                  const Spacer(),
+                  Text(
+                    'Lihat Detail →',
+                    style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.primaryColor),
+                  ),
+                ],
+              ),
           ],
         ),
       ),
