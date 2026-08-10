@@ -630,6 +630,9 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
       case 'SETTLEMENT_REVIEW': return 'Review Pelunasan';
       case 'COMPLETED': return 'Selesai';
       case 'CANCELLED': return 'Dibatalkan';
+      // Legacy fallback
+      case 'WAITING_PAYMENT': return 'Menunggu Pembayaran';
+      case 'PAYMENT_REVIEW': return 'Review Pembayaran';
       default: return status.split('_').map((w) => w[0].toUpperCase() + w.substring(1).toLowerCase()).join(' ');
     }
   }
@@ -646,6 +649,9 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
       case 'SETTLEMENT_REVIEW': return AppTheme.statusReview;
       case 'COMPLETED': return AppTheme.statusDone;
       case 'CANCELLED': return Colors.red;
+      // Legacy fallback
+      case 'WAITING_PAYMENT': return AppTheme.statusPayment;
+      case 'PAYMENT_REVIEW': return AppTheme.statusReview;
       default: return Colors.grey;
     }
   }
