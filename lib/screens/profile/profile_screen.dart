@@ -122,26 +122,10 @@ class ProfileScreen extends StatelessWidget {
                   _buildDivider(context),
                   _buildSettingItem(
                     context,
-                    icon: Icons.location_on_outlined,
-                    title: 'Alamat Saya',
-                    subtitle: 'Kelola alamat pengiriman & penjemputan',
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Fitur alamat segera hadir!')),
-                      );
-                    },
-                  ),
-                  _buildDivider(context),
-                  _buildSettingItem(
-                    context,
                     icon: Icons.payment_outlined,
                     title: 'Metode Pembayaran',
                     subtitle: 'Kelola e-wallet & rekening bank',
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Fitur pembayaran segera hadir!')),
-                      );
-                    },
+                    onTap: () => context.push('/payment-method'),
                   ),
                 ],
               ),

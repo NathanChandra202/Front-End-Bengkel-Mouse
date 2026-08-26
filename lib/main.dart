@@ -23,6 +23,7 @@ import 'screens/admin/admin_transaction_screen.dart';
 import 'screens/admin/admin_transaction_detail_screen.dart';
 import 'screens/profile/notifications_screen.dart';
 import 'screens/profile/help_center_screen.dart';
+import 'screens/profile/payment_method_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -127,6 +128,10 @@ final GoRouter _router = GoRouter(
     GoRoute(
       path: '/admin',
       builder: (context, state) => const AdminDashboardScreen(),
+    ),
+    GoRoute(
+      path: '/payment-method',
+      builder: (context, state) => const PaymentMethodScreen(),
     ),
     GoRoute(
       path: '/admin/stock',
