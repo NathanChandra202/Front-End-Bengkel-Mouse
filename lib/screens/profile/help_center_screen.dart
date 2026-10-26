@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../theme.dart';
+import '../../services/api_service.dart';
 
 class HelpCenterScreen extends StatelessWidget {
   const HelpCenterScreen({super.key});
@@ -44,7 +45,17 @@ class HelpCenterScreen extends StatelessWidget {
   ];
 
   Future<void> _launchWhatsApp() async {
-    const phone = '6281234567890'; // replace with real number
+    String phone = '6283811691729';
+    try {
+      final store = await ApiService.getStoreInfo();
+      if (store['whatsapp'] != null && store['whatsapp'].toString().trim().isNotEmpty) {
+        phone = store['whatsapp'].toString().replaceAll(RegExp(r'[^0-9]'), '');
+      } else if (store['phone'] != null && store['phone'].toString().trim().isNotEmpty) {
+        String p = store['phone'].toString().replaceAll(RegExp(r'[^0-9]'), '');
+        if (p.startsWith('0')) p = '62${p.substring(1)}';
+        phone = p;
+      }
+    } catch (_) {}
     const message = 'Halo Bengkel Mouse, saya membutuhkan bantuan.';
     final uri = Uri.parse('https://wa.me/$phone?text=${Uri.encodeComponent(message)}');
     if (await canLaunchUrl(uri)) {
